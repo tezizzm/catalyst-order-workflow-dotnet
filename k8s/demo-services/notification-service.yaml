@@ -30,9 +30,20 @@ spec:
                 secretKeyRef:
                   name: catalyst-app-tokens
                   key: notification-service
+            # Optional: inject Chaos Mesh token to enable chaos experiments from the UI
+            - name: CHAOS_MESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: chaos-mesh-account-token
+                  key: token
+                  optional: true
           envFrom:
             - configMapRef:
                 name: catalyst-env
+          volumeMounts:
+            # Optional: mount chaos experiment definition (apply k8s/demo-services/chaos-mesh.yaml to enable)
+            - name: chaos-experiment
+              mountPath: /etc/chaos
           livenessProbe:
             httpGet:
               path: /healthz
@@ -45,6 +56,11 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+      volumes:
+        - name: chaos-experiment
+          configMap:
+            name: chaos-experiment-config
+            optional: true
 ---
 apiVersion: v1
 kind: Service
