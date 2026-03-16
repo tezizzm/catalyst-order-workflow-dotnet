@@ -26,6 +26,28 @@ builder.Services.AddDaprClient((daprBuilder) =>
     });
 });
 
+// Add HttpClient for Chaos Mesh dashboard API
+builder.Services.AddHttpClient("chaos-mesh", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = config["ChaosMesh:BaseUrl"] ?? "http://chaos-dashboard.chaos-mesh.svc.cluster.local:2333";
+    client.BaseAddress = new Uri(baseUrl);
+});
+
+builder.Services.AddHttpClient("inventory-service", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["Services:InventoryService"] ?? "http://inventory-service.catalyst-order-workflow-demo.svc.cluster.local");
+    client.Timeout = TimeSpan.FromSeconds(3);
+});
+
+builder.Services.AddHttpClient("order-manager", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["Services:OrderManager"] ?? "http://order-manager.catalyst-order-workflow-demo.svc.cluster.local");
+    client.Timeout = TimeSpan.FromSeconds(3);
+});
+
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
 

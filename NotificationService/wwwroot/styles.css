@@ -111,6 +111,14 @@ h1 {
     border: 1px solid var(--border);
 }
 
+.services-health {
+    display: inline-flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .status-dot {
     width: 10px;
     height: 10px;
@@ -220,6 +228,52 @@ h1 {
 }
 
 .btn-accent:hover {
+    background: #7c3aed;
+}
+
+.btn-danger {
+    background: var(--error-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.chaos-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 0.25rem;
+    margin-left: 0.25rem;
+    cursor: pointer;
+    color: white;
+    background: var(--secondary-color);
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.chaos-toggle-btn:hover {
+    background: #7c3aed;
+}
+
+.chaos-toggle-btn.active {
+    background: var(--secondary-color);
+    color: #fbbf24;
+}
+
+.chaos-toggle-btn.active:hover {
     background: #7c3aed;
 }
 

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadHistoricalNotifications();
     setupSignalRConnection();
     setupEventListeners();
+    setupHealthPolling();
 });
 
 // Setup SignalR connection for real-time notifications
@@ -366,15 +367,96 @@ async function submitOrderFormX10() {
     }
 }
 
+// Service health polling
+function setupHealthPolling() {
+    async function checkAll() {
+        try {
+            const response = await fetch('/status', { signal: AbortSignal.timeout(5000) });
+            if (response.ok) {
+                const status = await response.json();
+                const dot = document.getElementById('inventory-status');
+                if (dot) dot.className = status.inventoryService === 'running' ? 'status-dot connected' : 'status-dot disconnected';
+
+                // Sync chaos button with server-side experiment state
+                const btn = document.getElementById('chaos-toggle-btn');
+                if (btn && !btn.disabled) {
+                    const serverActive = status.chaosExperimentActive === true;
+                    if (serverActive !== chaosActive) {
+                        chaosActive = serverActive;
+                        if (chaosActive) {
+                            btn.innerHTML = CHAOS_ICON_ACTIVE;
+                            btn.classList.add('active');
+                            btn.title = 'Stop chaos experiment (running)';
+                        } else {
+                            btn.innerHTML = CHAOS_ICON_IDLE;
+                            btn.classList.remove('active');
+                            btn.title = 'Kill inventory service';
+                        }
+                    }
+                }
+            }
+        } catch {
+            const dot = document.getElementById('inventory-status');
+            if (dot) dot.className = 'status-dot disconnected';
+        }
+    }
+
+    checkAll();
+    setInterval(checkAll, 5000);
+}
+
 // Generate unique ID
 function generateId() {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+// Chaos Mesh toggle
+const CHAOS_ICON_IDLE   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+const CHAOS_ICON_ACTIVE = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+let chaosActive = false;
+
+async function toggleChaos() {
+    const btn = document.getElementById('chaos-toggle-btn');
+    btn.disabled = true;
+
+    if (!chaosActive) {
+        try {
+            const response = await fetch('/chaos/start', { method: 'POST' });
+            if (response.ok) {
+                chaosActive = true;
+                btn.innerHTML = CHAOS_ICON_ACTIVE;
+                btn.classList.add('active');
+                btn.title = 'Stop chaos experiment (running)';
+            } else {
+                alert('Failed to start chaos: ' + await response.text());
+            }
+        } catch (err) {
+            alert('Error starting chaos: ' + err.message);
+        }
+    } else {
+        try {
+            const response = await fetch('/chaos/stop', { method: 'DELETE' });
+            if (response.ok) {
+                chaosActive = false;
+                btn.innerHTML = CHAOS_ICON_IDLE;
+                btn.classList.remove('active');
+                btn.title = 'Kill inventory service';
+            } else {
+                alert('Failed to stop chaos: ' + await response.text());
+            }
+        } catch (err) {
+            alert('Error stopping chaos: ' + err.message);
+        }
+    }
+
+    btn.disabled = false;
 }
 
 // Setup event listeners
 function setupEventListeners() {
     document.getElementById('clear-btn').addEventListener('click', clearNotifications);
     document.getElementById('create-order-btn').addEventListener('click', showOrderModal);
+    document.getElementById('chaos-toggle-btn').addEventListener('click', toggleChaos);
     
     // Modal event listeners
     document.getElementById('close-modal-btn').addEventListener('click', hideOrderModal);

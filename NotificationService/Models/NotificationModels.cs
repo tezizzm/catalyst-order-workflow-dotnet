@@ -22,3 +22,6 @@ public record NotificationViewModel
 public record CreateOrderRequest(string? OrderId, string CustomerId, List<OrderItem> Items);
 public record OrderItem(string ProductId, int Quantity, decimal Price);
 public record CreateOrderResult(string OrderId, string Message, string WorkflowInstanceId);
+
+// Chaos Mesh models
+public record ChaosMeshExperimentResult(string Uid, string Name, string Namespace, string Kind);
