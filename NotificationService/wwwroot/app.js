@@ -381,18 +381,7 @@ function setupHealthPolling() {
                 const btn = document.getElementById('chaos-toggle-btn');
                 if (btn && !btn.disabled) {
                     const serverActive = status.chaosExperimentActive === true;
-                    if (serverActive !== chaosActive) {
-                        chaosActive = serverActive;
-                        if (chaosActive) {
-                            btn.innerHTML = CHAOS_ICON_ACTIVE;
-                            btn.classList.add('active');
-                            btn.title = 'Stop chaos experiment (running)';
-                        } else {
-                            btn.innerHTML = CHAOS_ICON_IDLE;
-                            btn.classList.remove('active');
-                            btn.title = 'Kill inventory service';
-                        }
-                    }
+                    if (serverActive !== chaosActive) updateChaosUI(serverActive);
                 }
             }
         } catch {
@@ -411,9 +400,22 @@ function generateId() {
 }
 
 // Chaos Mesh toggle
-const CHAOS_ICON_IDLE   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-const CHAOS_ICON_ACTIVE = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+const CHAOS_SVG_IDLE   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+const CHAOS_SVG_ACTIVE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
 let chaosActive = false;
+
+function updateChaosUI(active) {
+    chaosActive = active;
+    const btn = document.getElementById('chaos-toggle-btn');
+    const dropdown = document.getElementById('chaos-dropdown');
+    if (btn) {
+        btn.innerHTML = active
+            ? `${CHAOS_SVG_ACTIVE} <span id="chaos-action-label">Stop Experiment</span>`
+            : `${CHAOS_SVG_IDLE} <span id="chaos-action-label">Start Experiment</span>`;
+        btn.classList.toggle('active', active);
+    }
+    if (dropdown) dropdown.classList.toggle('chaos-active', active);
+}
 
 async function toggleChaos() {
     const btn = document.getElementById('chaos-toggle-btn');
@@ -423,10 +425,7 @@ async function toggleChaos() {
         try {
             const response = await fetch('/chaos/start', { method: 'POST' });
             if (response.ok) {
-                chaosActive = true;
-                btn.innerHTML = CHAOS_ICON_ACTIVE;
-                btn.classList.add('active');
-                btn.title = 'Stop chaos experiment (running)';
+                updateChaosUI(true);
             } else {
                 alert('Failed to start chaos: ' + await response.text());
             }
@@ -437,10 +436,7 @@ async function toggleChaos() {
         try {
             const response = await fetch('/chaos/stop', { method: 'DELETE' });
             if (response.ok) {
-                chaosActive = false;
-                btn.innerHTML = CHAOS_ICON_IDLE;
-                btn.classList.remove('active');
-                btn.title = 'Kill inventory service';
+                updateChaosUI(false);
             } else {
                 alert('Failed to stop chaos: ' + await response.text());
             }
@@ -457,6 +453,20 @@ function setupEventListeners() {
     document.getElementById('clear-btn').addEventListener('click', clearNotifications);
     document.getElementById('create-order-btn').addEventListener('click', showOrderModal);
     document.getElementById('chaos-toggle-btn').addEventListener('click', toggleChaos);
+
+    // Chaos dropdown open/close
+    const arrow = document.getElementById('chaos-dropdown-arrow');
+    const menu = document.getElementById('chaos-dropdown-menu');
+    arrow.addEventListener('click', () => {
+        const open = menu.classList.toggle('open');
+        arrow.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('chaos-dropdown').contains(e.target)) {
+            menu.classList.remove('open');
+            arrow.setAttribute('aria-expanded', 'false');
+        }
+    });
     
     // Modal event listeners
     document.getElementById('close-modal-btn').addEventListener('click', hideOrderModal);

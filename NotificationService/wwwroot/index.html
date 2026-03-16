@@ -19,15 +19,6 @@
                 <span id="connection-status" class="status-dot disconnected"></span>
                 <span id="connection-text">Connecting...</span>
             </div>
-            <div class="services-health">
-                <div class="status-indicator">
-                    <span id="inventory-status" class="status-dot disconnected"></span>
-                    <span>Inventory Service</span>
-                    <button id="chaos-toggle-btn" class="chaos-toggle-btn" title="Start chaos experiment">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    </button>
-                </div>
-            </div>
         </header>
 
         <div class="stats">
@@ -114,10 +105,29 @@
         </div>
     </div>
 
-    <a class="chaos-mesh-fab" href="http://localhost:2333" target="_blank">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Chaos Mesh
-    </a>
+    <div class="chaos-dropdown" id="chaos-dropdown">
+        <div class="chaos-split-btn">
+            <a href="http://localhost:2333" target="_blank" class="chaos-split-main">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Chaos Mesh
+                <span class="chaos-live-dot"></span>
+            </a>
+            <button class="chaos-split-arrow" id="chaos-dropdown-arrow" aria-label="Chaos actions" aria-expanded="false">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+        </div>
+        <div class="chaos-dropdown-menu" id="chaos-dropdown-menu">
+            <div class="chaos-service-row">
+                <span id="inventory-status" class="status-dot disconnected"></span>
+                <span class="chaos-service-label">Inventory Service</span>
+            </div>
+            <div class="chaos-dropdown-divider"></div>
+            <button id="chaos-toggle-btn" class="chaos-dropdown-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <span id="chaos-action-label">Start Experiment</span>
+            </button>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script src="app.js"></script>
