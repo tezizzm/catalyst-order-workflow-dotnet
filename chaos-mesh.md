@@ -14,103 +14,59 @@ helm install chaos-mesh chaos-mesh/chaos-mesh \
 
 ## Access the Chaos Mesh Dashboard
 
-Get the external IP of the dashboard:
+For kind clusters, use port-forwarding:
 
 ```bash
-kubectl get svc -n chaos-mesh chaos-dashboard
+kubectl port-forward svc/chaos-dashboard -n chaos-mesh 2333:2333
 ```
 
-Then open `http://<EXTERNAL-IP>:2333` in your browser.
+Then open `http://localhost:2333` in your browser.
 
-## Dashboard Login (RBAC Token)
+## Service Account & Token
 
-Create a service account and generate a token to log in:
+The service account, cluster role binding, and long-lived token secret are managed as part of the demo manifests in `kind/demo-services/chaos-mesh-secret.yaml`. They are applied automatically when you run:
 
 ```bash
-kubectl create serviceaccount chaos-mesh-account -n chaos-mesh
-kubectl create clusterrolebinding chaos-mesh-account-binding \
-  --clusterrole=cluster-admin \
-  --serviceaccount=chaos-mesh:chaos-mesh-account
-kubectl create token chaos-mesh-account -n chaos-mesh
+make deploy-kind
 ```
 
-Copy the output token and paste it into the dashboard login screen.
+The token is stored in the `chaos-mesh-account-token` Secret in the `catalyst-order-workflow-demo` namespace and injected into the notification service pod as `CHAOS_MESH_TOKEN`.
 
-You can create multiple service accounts with different permissions. For example, a read-only account:
+To retrieve the token (e.g. to log into the dashboard):
 
 ```bash
-kubectl create serviceaccount chaos-viewer -n chaos-mesh
-kubectl create clusterrolebinding chaos-viewer-binding \
-  --clusterrole=viewer \
-  --serviceaccount=chaos-mesh:chaos-viewer
-kubectl create token chaos-viewer -n chaos-mesh
+kubectl get secret chaos-mesh-account-token \
+  -n catalyst-order-workflow-demo \
+  -o jsonpath='{.data.token}' | base64 -d
 ```
 
-Tokens created with `kubectl create token` are short-lived by default (1 hour). To create a non-expiring token, use a Secret-based approach:
+## Chaos Experiment
+
+The experiment definition is stored in the `chaos-experiment-config` ConfigMap (`kind/demo-services/chaos-experiment-config.yaml`) and mounted into the notification service at `/etc/chaos/experiment.json`. To change the experiment, edit the ConfigMap and redeploy — no code changes required.
+
+The default experiment kills all pods with label `app=inventory-service` in the `catalyst-order-workflow-demo` namespace.
+
+## Triggering Chaos from the UI
+
+The notification service dashboard has a lightning bolt button next to the Inventory Service status indicator. Clicking it starts or stops the experiment by calling `POST /chaos/start` or `DELETE /chaos/stop` on the notification service.
+
+## Triggering Chaos Manually
 
 ```bash
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: chaos-mesh-account-token
-  namespace: chaos-mesh
-  annotations:
-    kubernetes.io/service-account.name: chaos-mesh-account
-type: kubernetes.io/service-account-token
-EOF
+# Start
+kubectl exec -n catalyst-order-workflow-demo deploy/notification-service -- \
+  curl -s -X POST http://localhost:8080/chaos/start
+
+# Stop
+kubectl exec -n catalyst-order-workflow-demo deploy/notification-service -- \
+  curl -s -X DELETE http://localhost:8080/chaos/stop
 ```
 
-Retrieve the token:
+## Cleanup
+
+If you previously created resources manually in the `chaos-mesh` namespace, remove them:
 
 ```bash
-kubectl get secret chaos-mesh-account-token -n chaos-mesh -o jsonpath='{.data.token}' | base64 -d
-```
-
-## Experiments
-
-### Pod Kill (one by one)
-
-Kills one random pod in the `catalyst-order-workflow-demo` namespace. Deployed paused — trigger it manually from the dashboard or CLI.
-
-```yaml
-apiVersion: chaos-mesh.org/v1alpha1
-kind: PodChaos
-metadata:
-  name: pod-kill-one-by-one
-  namespace: catalyst-order-workflow-demo
-  annotations:
-    experiment.chaos-mesh.org/pause: "true"
-spec:
-  action: pod-kill
-  mode: one
-  selector:
-    namespaces:
-      - catalyst-order-workflow-demo
-```
-
-Apply it:
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: chaos-mesh.org/v1alpha1
-kind: PodChaos
-metadata:
-  name: pod-kill-one-by-one
-  namespace: catalyst-order-workflow-demo
-  annotations:
-    experiment.chaos-mesh.org/pause: "true"
-spec:
-  action: pod-kill
-  mode: one
-  selector:
-    namespaces:
-      - catalyst-order-workflow-demo
-EOF
-```
-
-Unpause when ready:
-
-```bash
-kubectl annotate podchaos pod-kill-one-by-one -n catalyst-order-workflow-demo experiment.chaos-mesh.org/pause=false --overwrite
+kubectl delete serviceaccount chaos-mesh-account -n chaos-mesh
+kubectl delete clusterrolebinding chaos-mesh-account-binding
 ```
