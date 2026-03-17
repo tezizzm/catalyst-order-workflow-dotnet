@@ -352,18 +352,47 @@ async function submitOrderFormX10() {
         price: parseFloat(prices[index])
     }));
 
-    try {
-        await Promise.all(Array.from({ length: 10 }, () =>
-            fetch('/order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: null, customerId, items })
-            })
-        ));
+    const x10Btn = document.getElementById('create-order-x10-btn');
+    const submitBtn = form.querySelector('.btn-group-primary');
+    const cancelBtn = document.getElementById('cancel-order-btn');
+    const closeBtn = document.getElementById('close-modal-btn');
+
+    // Lock modal during batch
+    submitBtn.disabled = true;
+    cancelBtn.disabled = true;
+    closeBtn.disabled = true;
+    x10Btn.classList.add('loading');
+    x10Btn.textContent = '0 / 10';
+
+    let completed = 0;
+    let failed = 0;
+
+    await Promise.all(Array.from({ length: 10 }, () =>
+        fetch('/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: null, customerId, items })
+        }).then(res => {
+            if (!res.ok) failed++;
+        }).catch(() => {
+            failed++;
+        }).finally(() => {
+            completed++;
+            x10Btn.textContent = `${completed} / 10`;
+        })
+    ));
+
+    // Restore UI
+    submitBtn.disabled = false;
+    cancelBtn.disabled = false;
+    closeBtn.disabled = false;
+    x10Btn.classList.remove('loading');
+    x10Btn.textContent = '×10';
+
+    if (failed === 0) {
         hideOrderModal();
-    } catch (error) {
-        console.error('Error creating orders:', error);
-        alert('Error creating orders: ' + error.message);
+    } else {
+        alert(`${10 - failed}/10 orders created. ${failed} failed — check console for details.`);
     }
 }
 
@@ -481,9 +510,9 @@ function setupEventListeners() {
     document.getElementById('order-form').addEventListener('submit', submitOrderForm);
     document.getElementById('create-order-x10-btn').addEventListener('click', submitOrderFormX10);
     
-    // Close modal on outside click
+    // Close modal on outside click (only when not processing a batch)
     document.getElementById('order-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'order-modal') {
+        if (e.target.id === 'order-modal' && !document.getElementById('create-order-x10-btn').classList.contains('loading')) {
             hideOrderModal();
         }
     });

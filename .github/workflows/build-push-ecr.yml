@@ -9,7 +9,7 @@ on:
 env:
   AWS_REGION: us-east-1
   REGISTRY: public.ecr.aws/e9f1v8j5
-  IMAGE_VERSION: "2.10"
+  IMAGE_VERSION: "2.11"
 
 jobs:
   build-and-push:
