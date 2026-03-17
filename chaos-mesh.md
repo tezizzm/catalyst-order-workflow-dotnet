@@ -9,7 +9,8 @@ helm repo add chaos-mesh https://charts.chaos-mesh.org
 helm repo update
 helm install chaos-mesh chaos-mesh/chaos-mesh \
   -n=chaos-mesh --create-namespace \
-  --set dashboard.service.type=LoadBalancer
+  --set dashboard.service.type=LoadBalancer \
+  --set dashboard.service.port=80
 ```
 
 ## Access the Chaos Mesh Dashboard

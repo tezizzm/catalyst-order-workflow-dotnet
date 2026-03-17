@@ -18,7 +18,7 @@ spec:
       containers:
         - name: notification-service
           # You can use this public image for the demo, or build and push your own
-          image: public.ecr.aws/e9f1v8j5/catalyst-demo/notification-service:2.9
+          image: public.ecr.aws/e9f1v8j5/catalyst-demo/notification-service:2.10
           imagePullPolicy: IfNotPresent
           command: ["dotnet", "NotificationService.dll"]
           ports:
@@ -30,6 +30,8 @@ spec:
                 secretKeyRef:
                   name: catalyst-app-tokens
                   key: notification-service
+            - name: ChaosMesh__DashboardUrl
+              value: "https://catalyst-demo-chaosmesh.diagrid.us"
             # Optional: inject Chaos Mesh token to enable chaos experiments from the UI
             - name: CHAOS_MESH_TOKEN
               valueFrom:

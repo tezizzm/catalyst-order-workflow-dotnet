@@ -377,6 +377,12 @@ function setupHealthPolling() {
                 const dot = document.getElementById('inventory-status');
                 if (dot) dot.className = status.inventoryService === 'running' ? 'status-dot connected' : 'status-dot disconnected';
 
+                // Apply chaos dashboard URL (set on first successful poll)
+                if (status.chaosMeshDashboardUrl) {
+                    const link = document.querySelector('.chaos-split-main');
+                    if (link) link.href = status.chaosMeshDashboardUrl;
+                }
+
                 // Sync chaos button with server-side experiment state
                 const btn = document.getElementById('chaos-toggle-btn');
                 if (btn && !btn.disabled) {

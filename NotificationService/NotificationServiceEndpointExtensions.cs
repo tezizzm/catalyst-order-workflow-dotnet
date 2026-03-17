@@ -132,6 +132,7 @@ public static class NotificationServiceEndpointExtensions
                 inventoryService       = inventoryStatus,
                 orderManager           = orderManagerStatus,
                 chaosExperimentActive  = !string.IsNullOrEmpty(_chaosExperimentUid),
+                chaosMeshDashboardUrl  = config["ChaosMesh:DashboardUrl"] ?? "http://localhost:2333",
             });
         })
         .WithName("GetStatus")
