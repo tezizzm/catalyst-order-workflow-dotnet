@@ -7,57 +7,57 @@
 #   kubectl delete -f k8s/demo-services/chaos-mesh.yaml
 #
 # Prerequisites: Chaos Mesh must be installed in the cluster (see chaos-mesh.md).
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: chaos-mesh-api
-  namespace: catalyst-order-workflow-demo
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: chaos-mesh-api-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: chaos-mesh-api
-    namespace: catalyst-order-workflow-demo
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: chaos-mesh-api-token
-  namespace: catalyst-order-workflow-demo
-  annotations:
-    kubernetes.io/service-account.name: chaos-mesh-api
-type: kubernetes.io/service-account-token
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: chaos-experiment-config
-  namespace: catalyst-order-workflow-demo
-data:
-  experiment.json: |
-    {
-      "apiVersion": "chaos-mesh.org/v1alpha1",
-      "kind": "PodChaos",
-      "metadata": {
-        "name": "killinventory",
-        "namespace": "catalyst-order-workflow-demo"
-      },
-      "spec": {
-        "action": "pod-failure",
-        "mode": "all",
-        "selector": {
-          "namespaces": ["catalyst-order-workflow-demo"],
-          "labelSelectors": {
-            "app": "inventory-service"
-          }
-        }
-      }
-    }
+# ---
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: chaos-mesh-api
+#   namespace: catalyst-order-workflow-demo
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: chaos-mesh-api-binding
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: cluster-admin
+# subjects:
+#   - kind: ServiceAccount
+#     name: chaos-mesh-api
+#     namespace: catalyst-order-workflow-demo
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: chaos-mesh-api-token
+#   namespace: catalyst-order-workflow-demo
+#   annotations:
+#     kubernetes.io/service-account.name: chaos-mesh-api
+# type: kubernetes.io/service-account-token
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: chaos-experiment-config
+#   namespace: catalyst-order-workflow-demo
+# data:
+#   experiment.json: |
+#     {
+#       "apiVersion": "chaos-mesh.org/v1alpha1",
+#       "kind": "PodChaos",
+#       "metadata": {
+#         "name": "killinventory",
+#         "namespace": "catalyst-order-workflow-demo"
+#       },
+#       "spec": {
+#         "action": "pod-failure",
+#         "mode": "all",
+#         "selector": {
+#           "namespaces": ["catalyst-order-workflow-demo"],
+#           "labelSelectors": {
+#             "app": "inventory-service"
+#           }
+#         }
+#       }
+#     }
