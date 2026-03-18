@@ -68,21 +68,26 @@ public static class AppHostExtensions
 
     public static void ConfigureForCatalyst(this IDistributedApplicationBuilder builder, IResourceBuilder<ProjectResource> orderManager, IResourceBuilder<ProjectResource> inventoryService, IResourceBuilder<ProjectResource> notificationService)
     {
-        builder.AddCatalystProject("order-workflow")
-            .WithCatalystKvStore("inventory-kv-store")
-            .WithCatalystPubSub("shop-activity-pubsub")
+        builder
+            .AddCatalystProject("order-workflow", new()
+            {
+                EnableManagedWorkflow = true,
+            })
+            .WithCatalystKvStore("inventory-store")
+            .WithCatalystPubSub("shop-activity")
             .WithComponent("inventory-store", new DiagridStateStore
             {
                 Metadata = new()
                 {
-                    State = "inventory-kv-store",
+                    State = "inventory-store",
+                    ActorStateStore = true,
                 },
             })
             .WithComponent("shop-activity", new DiagridPubSub
             {
                 Metadata = new()
                 {
-                    PubSubName = "shop-activity-pubsub",
+                    PubSubName = "shop-activity",
                 },
             });
 
