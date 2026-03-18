@@ -59,7 +59,7 @@ create-order:
 # ── Cluster setup internals ──────────────────────────────────────────────────
 setup: kind-create dapr-install redis-install redis-wait chaos-mesh-install chaos-mesh-wait
 	@echo ""
-	@echo "✓ Cluster ready. Run: make build push kind-deploy"
+	@echo "✓ Cluster ready. Run: make build push deploy-kind"
 
 kind-create:
 	@if kind get clusters 2>/dev/null | grep -q "^$(CLUSTER_NAME)$$"; then \
@@ -108,6 +108,8 @@ chaos-mesh-install:
 	helm install chaos-mesh chaos-mesh/chaos-mesh \
 	-n=chaos-mesh --create-namespace \
 	--set dashboard.service.type=ClusterIP
+	kubectl patch service chaos-dashboard -n chaos-mesh --type='json' \
+	-p='[{"op":"replace","path":"/spec/ports/0/port","value":80}]'
 	@echo "✓ Chaos Mesh installed"
 
 chaos-mesh-wait:
