@@ -2,9 +2,7 @@ using System.Text.Json;
 using Diagrid.Labs.Catalyst.OrderWorkflow.Common.ServiceDefaults;
 using Diagrid.Labs.Catalyst.OrderWorkflow.NotificationService;
 using Diagrid.Labs.Catalyst.OrderWorkflow.NotificationService.Hubs;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.AspNetCore.WebUtilities;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -84,35 +82,6 @@ app.UseStaticFiles();
 
 // Map notification endpoints
 app.MapNotificationServiceEndpoints();
-
-app.MapPost("blah", async (HttpContext context) =>
-{
-    var bodyString = await new StreamReader(context.Request.Body).ReadToEndAsync();
-
-    context.Request.Body.Position = 0;
-
-    var boundary = context.Request.GetMultipartBoundary();
-    if (string.IsNullOrWhiteSpace(boundary))
-    {
-        return Results.BadRequest("Not a multipart request");
-    }
-
-    var reader = new MultipartReader(boundary, context.Request.Body);
-    var section = await reader.ReadNextSectionAsync();
-
-    if (section == null)
-    {
-        return Results.BadRequest("No file found");
-    }
-
-    var fileStream = new MemoryStream();
-    await section.Body.CopyToAsync(fileStream);
-    fileStream.Position = 0;
-
-    var size = fileStream.Length;
-
-    return Results.Ok(new { size });
-});
 
 var run = app.RunAsync();
 
