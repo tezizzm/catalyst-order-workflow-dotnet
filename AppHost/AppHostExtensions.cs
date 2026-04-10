@@ -33,7 +33,7 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
@@ -42,7 +42,7 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
@@ -51,38 +51,49 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
         builder
             .AddContainer("diagrid-dashboard", "ghcr.io/diagridio/diagrid-dashboard:latest")
             .WithContainerName("catalyst-order-workflow-diagrid-dashboard")
-            .WithBindMount(Path.Join(ExecutingPath, "Resources"), "/app/components")
+            .WithBindMount(Path.Join(ExecutingPath, "Resources/diagrid-dashboard"), "/app/components")
             .WithEnvironment("COMPONENT_FILE", "/app/components/inventory-store-diagrid-dashboard.yaml")
             .WithEnvironment("APP_ID", "diagrid-dashboard")
             .WithHttpEndpoint(targetPort: 8080)
             .WithReference(cache)
+            .WaitFor(cache)
         ;
     }
 
-    public static void ConfigureForCatalyst(this IDistributedApplicationBuilder builder, IResourceBuilder<ProjectResource> orderManager, IResourceBuilder<ProjectResource> inventoryService, IResourceBuilder<ProjectResource> notificationService)
+    public static void ConfigureForCatalyst(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<ProjectResource> orderManager,         // Order manager service from AppHost.cs
+        IResourceBuilder<ProjectResource> inventoryService,     // Inventory service from AppHost.cs
+        IResourceBuilder<ProjectResource> notificationService   // Notification service from AppHost.cs
+    )
     {
-        builder.AddCatalystProject("order-workflow")
-            .WithCatalystKvStore("inventory-kv-store")
-            .WithCatalystPubSub("shop-activity-pubsub")
+        builder
+            .AddCatalystProject("order-workflow", new()
+            {
+                EnableManagedWorkflow = true,
+            })
+            .WithCatalystKvStore("inventory-store")
+            .WithCatalystPubSub("shop-activity")
             .WithComponent("inventory-store", new DiagridStateStore
             {
                 Metadata = new()
                 {
-                    State = "inventory-kv-store",
+                    State = "inventory-store",
+                    ActorStateStore = true,
                 },
             })
             .WithComponent("shop-activity", new DiagridPubSub
             {
                 Metadata = new()
                 {
-                    PubSubName = "shop-activity-pubsub",
+                    PubSubName = "shop-activity",
                 },
             });
 

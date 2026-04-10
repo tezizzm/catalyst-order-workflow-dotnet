@@ -83,6 +83,8 @@ app.UseStaticFiles();
 // Map notification endpoints
 app.MapNotificationServiceEndpoints();
 
+var run = app.RunAsync();
+
 Console.WriteLine("Notification service started...");
 
-app.Run();
+await run;

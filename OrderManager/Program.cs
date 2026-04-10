@@ -1,5 +1,7 @@
 using System;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using Dapr.Workflow;
 using Diagrid.Labs.Catalyst.OrderWorkflow.Common.ServiceDefaults;
 using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager;
@@ -32,6 +34,18 @@ builder.Services.AddDaprClient((daprBuilder) =>
 
 builder.Services.AddDaprWorkflow((options) =>
 {
+    options.UseGrpcChannelOptions(new()
+    {
+        HttpHandler = new SocketsHttpHandler
+        {
+            PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
+            KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+            KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+            KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always,
+            EnableMultipleHttp2Connections = true,
+        },
+    });
+
     options.RegisterWorkflow<OrderProcessingWorkflow>();
         options.RegisterActivity<ValidateOrderActivity>();
         options.RegisterActivity<ProcessPaymentActivity>();
