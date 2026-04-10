@@ -33,7 +33,7 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
@@ -42,7 +42,7 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
@@ -51,18 +51,19 @@ public static class AppHostExtensions
             LogLevel = "debug",
             ResourcesPaths =
             [
-                Path.Join(ExecutingPath, "Resources"),
+                Path.Join(ExecutingPath, "Resources/dapr"),
             ],
         });
 
         builder
             .AddContainer("diagrid-dashboard", "ghcr.io/diagridio/diagrid-dashboard:latest")
             .WithContainerName("catalyst-order-workflow-diagrid-dashboard")
-            .WithBindMount(Path.Join(ExecutingPath, "Resources"), "/app/components")
+            .WithBindMount(Path.Join(ExecutingPath, "Resources/diagrid-dashboard"), "/app/components")
             .WithEnvironment("COMPONENT_FILE", "/app/components/inventory-store-diagrid-dashboard.yaml")
             .WithEnvironment("APP_ID", "diagrid-dashboard")
             .WithHttpEndpoint(targetPort: 8080)
             .WithReference(cache)
+            .WaitFor(cache)
         ;
     }
 
