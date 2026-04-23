@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.InventoryService;
 
@@ -37,10 +38,12 @@ public static class InventoryServiceEndpointExtensions
 
     public static async Task<Results<Ok<InventorySearchResult>, NotFound>> SearchInventory(
         [FromServices] DaprClient daprClient,
+        [FromServices] ILoggerFactory loggerFactory,
         [FromBody] InventorySearchRequest request
     )
     {
-        Console.WriteLine($"Searching inventory for {request.Items.Count} items");
+        var logger = loggerFactory.CreateLogger("InventoryService");
+        logger.LogInformation("Searching inventory for {ItemCount} items", request.Items.Count);
         var currentInventoryItems = new List<ItemStatus>();
         foreach (var item in request.Items)
         {
@@ -52,7 +55,7 @@ public static class InventoryServiceEndpointExtensions
 
             var currentQuantity = inventoryData.Quantity;
             currentInventoryItems.Add(item with { Quantity = currentQuantity });
-            Console.WriteLine($"Product {item.ProductId}: {currentQuantity} units available");
+            logger.LogInformation("Product {ProductId}: {Quantity} units available", item.ProductId, currentQuantity);
         }
 
         return TypedResults.Ok(new InventorySearchResult
@@ -79,9 +82,13 @@ public static class InventoryServiceEndpointExtensions
         });
     }
 
-    public static async Task<Ok> InitializeInventory([FromServices] DaprClient daprClient)
+    public static async Task<Ok> InitializeInventory(
+        [FromServices] DaprClient daprClient,
+        [FromServices] ILoggerFactory loggerFactory
+    )
     {
-        Console.WriteLine($"Initializing inventory with {SampleInventory.Count} products");
+        var logger = loggerFactory.CreateLogger("InventoryService");
+        logger.LogInformation("Initializing inventory with {ProductCount} products", SampleInventory.Count);
         foreach (var item in SampleInventory)
         {
             var inventoryKey = $"inventory:{item.Key}";
@@ -93,7 +100,7 @@ public static class InventoryServiceEndpointExtensions
             };
 
             await daprClient.SaveStateAsync(ResourceNames.InventoryStore, inventoryKey, inventoryData);
-            Console.WriteLine($"Initialized {item.Key} with {item.Value} units");
+            logger.LogInformation("Initialized {ProductId} with {Quantity} units", item.Key, item.Value);
         }
 
         return TypedResults.Ok();
@@ -101,10 +108,12 @@ public static class InventoryServiceEndpointExtensions
 
     public static async Task<Ok<UpdateInventoryResult>> UpdateInventory(
         [FromServices] DaprClient daprClient,
+        [FromServices] ILoggerFactory loggerFactory,
         [FromBody] UpdateInventoryRequest request
     )
     {
-        Console.WriteLine($"Updating inventory - Operation: {request.Operation}, Items: {request.Items.Count}");
+        var logger = loggerFactory.CreateLogger("InventoryService");
+        logger.LogInformation("Updating inventory - Operation: {Operation}, Items: {ItemCount}", request.Operation, request.Items.Count);
         foreach (var item in request.Items)
         {
             var inventoryKey = $"inventory:{item.ProductId}";
@@ -128,7 +137,7 @@ public static class InventoryServiceEndpointExtensions
             };
 
             await daprClient.SaveStateAsync(ResourceNames.InventoryStore, inventoryKey, updatedInventory);
-            Console.WriteLine($"{item.ProductId}: {currentQuantity} → {newQuantity} units ({request.Operation})");
+            logger.LogInformation("{ProductId}: {OldQuantity} → {NewQuantity} units ({Operation})", item.ProductId, currentQuantity, newQuantity, request.Operation);
         }
 
         return TypedResults.Ok(new UpdateInventoryResult
@@ -138,31 +147,35 @@ public static class InventoryServiceEndpointExtensions
         });
     }
 
-    public static async Task<NoContent> CreateOrder([FromBody] OrderStatusNotification notification)
+    public static async Task<NoContent> CreateOrder(
+        [FromServices] ILoggerFactory loggerFactory,
+        [FromBody] OrderStatusNotification notification
+    )
     {
+        var logger = loggerFactory.CreateLogger("InventoryService");
         await Task.CompletedTask;
-        Console.WriteLine($"Received order notification - Order ID: {notification.OrderId}, Status: {notification.Status}");
+        logger.LogInformation("Received order notification - Order ID: {OrderId}, Status: {Status}", notification.OrderId, notification.Status);
 
         switch (notification.Status.ToLower())
         {
             case "created":
-                Console.WriteLine($"Order {notification.OrderId} created and being processed");
+                logger.LogInformation("Order {OrderId} created and being processed", notification.OrderId);
                 break;
 
             case "payment_processed":
-                Console.WriteLine($"Payment processed for order {notification.OrderId}");
+                logger.LogInformation("Payment processed for order {OrderId}", notification.OrderId);
                 break;
 
             case "shipped":
-                Console.WriteLine($"Order {notification.OrderId} shipped");
+                logger.LogInformation("Order {OrderId} shipped", notification.OrderId);
                 break;
 
             case "delivered":
-                Console.WriteLine($"Order {notification.OrderId} delivered");
+                logger.LogInformation("Order {OrderId} delivered", notification.OrderId);
                 break;
 
             case "completed":
-                Console.WriteLine($"Order {notification.OrderId} completed");
+                logger.LogInformation("Order {OrderId} completed", notification.OrderId);
                 break;
 
             default:

@@ -4,14 +4,15 @@ using Dapr.Client;
 using Dapr.Workflow;
 using Diagrid.Labs.Catalyst.OrderWorkflow.Common.ServiceDefaults;
 using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Activity;
 
-public class SendNotificationActivity(DaprClient daprClient) : WorkflowActivity<NotificationRequest, bool>
+public class SendNotificationActivity(DaprClient daprClient, ILogger<SendNotificationActivity> logger) : WorkflowActivity<NotificationRequest, bool>
 {
     public override async Task<bool> RunAsync(WorkflowActivityContext context, NotificationRequest request)
     {
-        Console.WriteLine($"Sent '{request.Status}' notification for Order ID: {request.OrderId}");
+        logger.LogInformation("Sent '{Status}' notification for Order ID: {OrderId}", request.Status, request.OrderId);
         
         var orderNotification = new OrderStatusNotification
         {

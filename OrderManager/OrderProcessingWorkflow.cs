@@ -5,11 +5,12 @@ using Dapr.Workflow;
 using Diagrid.Labs.Catalyst.OrderWorkflow.Common.Domain;
 using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Activity;
 using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Model;
+using Microsoft.Extensions.Logging;
 using InventoryItem = Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Model.InventoryItem;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager;
 
-public class OrderProcessingWorkflow : Workflow<OrderPayload, OrderResult>
+public class OrderProcessingWorkflow(ILogger<OrderProcessingWorkflow> logger) : Workflow<OrderPayload, OrderResult>
 {
     public override async Task<OrderResult> RunAsync(WorkflowContext context, OrderPayload order)
     {
@@ -140,7 +141,7 @@ public class OrderProcessingWorkflow : Workflow<OrderPayload, OrderResult>
             activityOptions
         );
 
-        Console.WriteLine($"Order processing completed successfully for Order ID: {orderId}");
+        logger.LogInformation("Order processing completed successfully for Order ID: {OrderId}", orderId);
 
         return new(true, $"Order {order.OrderId} processed successfully");
     }

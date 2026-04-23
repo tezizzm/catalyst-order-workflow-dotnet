@@ -2,18 +2,19 @@ using System;
 using System.Threading.Tasks;
 using Dapr.Workflow;
 using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Activity;
 
-public class ProcessPaymentActivity : WorkflowActivity<PaymentRequest, PaymentResult>
+public class ProcessPaymentActivity(ILogger<ProcessPaymentActivity> logger) : WorkflowActivity<PaymentRequest, PaymentResult>
 {
     public override async Task<PaymentResult> RunAsync(WorkflowActivityContext context, PaymentRequest request)
     {
-        Console.WriteLine($"Processing payment for Order ID: {request.OrderId}, Amount: ${request.Amount}");
-        
+        logger.LogInformation("Processing payment for Order ID: {OrderId}, Amount: ${Amount}", request.OrderId, request.Amount);
+
         if (request.Amount <= 0)
         {
-            Console.WriteLine($"Payment failed for Order ID: {request.OrderId} - Reason: Invalid payment amount");
+            logger.LogWarning("Payment failed for Order ID: {OrderId} - Reason: Invalid payment amount", request.OrderId);
             return new(false, "Invalid payment amount");
         }
 
@@ -21,11 +22,11 @@ public class ProcessPaymentActivity : WorkflowActivity<PaymentRequest, PaymentRe
 
         if (request.Amount > 1000)
         {
-            Console.WriteLine($"Payment failed for Order ID: {request.OrderId} - Reason: Payment amount exceeds limit");
+            logger.LogWarning("Payment failed for Order ID: {OrderId} - Reason: Payment amount exceeds limit", request.OrderId);
             return new(false, "Payment amount exceeds limit");
         }
 
-        Console.WriteLine($"Payment processed successfully for Order ID: {request.OrderId}");
+        logger.LogInformation("Payment processed successfully for Order ID: {OrderId}", request.OrderId);
         return new(true, "Payment processed successfully");
     }
 }

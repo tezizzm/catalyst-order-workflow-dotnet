@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager;
 
@@ -27,11 +28,13 @@ public static class OrderManagerEndpointExtensions
 
     public static async Task<Ok<CreateOrderResult>> CreateOrder(
         [FromServices] DaprWorkflowClient workflowClient,
+        [FromServices] ILoggerFactory loggerFactory,
         [FromBody] CreateOrderRequest request
     )
     {
+        var logger = loggerFactory.CreateLogger("OrderManager");
         var orderId = request.OrderId ?? Guid.CreateVersion7().ToString();
-        Console.WriteLine($"Received new order request - Customer: {request.CustomerId}, Items: {request.Items.Count}");
+        logger.LogInformation("Received new order request - Customer: {CustomerId}, Items: {ItemCount}", request.CustomerId, request.Items.Count);
 
         var orderPayload = new OrderPayload
         {
@@ -43,7 +46,7 @@ public static class OrderManagerEndpointExtensions
         };
 
         await workflowClient.ScheduleNewWorkflowAsync(name: nameof(OrderProcessingWorkflow), input: orderPayload, instanceId: orderId);
-        Console.WriteLine($"Started workflow for Order ID: {orderId}, Total: ${orderPayload.TotalAmount}");
+        logger.LogInformation("Started workflow for Order ID: {OrderId}, Total: ${TotalAmount}", orderId, orderPayload.TotalAmount);
 
         return TypedResults.Ok(new CreateOrderResult
         {

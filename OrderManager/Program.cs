@@ -9,6 +9,7 @@ using Diagrid.Labs.Catalyst.OrderWorkflow.OrderManager.Activity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,7 +69,8 @@ app.MapScalarApiReference();
 
 app.MapWorkerEndpoints();
 
-Console.WriteLine("Workflow engine configured with 5 activities");
-Console.WriteLine("Order Manager Service ready!");
+var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("OrderManager");
+logger.LogInformation("Workflow engine configured with 5 activities");
+logger.LogInformation("Order Manager Service ready!");
 
 app.Run();

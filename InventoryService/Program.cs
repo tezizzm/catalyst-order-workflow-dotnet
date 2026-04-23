@@ -7,6 +7,7 @@ using Diagrid.Labs.Catalyst.OrderWorkflow.InventoryService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,7 +59,8 @@ foreach (var item in InventoryServiceEndpointExtensions.SampleInventory)
     await daprClient.SaveStateAsync(ResourceNames.InventoryStore, inventoryKey, inventoryData);
 }
 
-Console.WriteLine($"Initialized {InventoryServiceEndpointExtensions.SampleInventory.Count} products");
-Console.WriteLine("Inventory Service started...");
+var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("InventoryService");
+logger.LogInformation("Initialized {ProductCount} products", InventoryServiceEndpointExtensions.SampleInventory.Count);
+logger.LogInformation("Inventory Service started...");
 
 await app.RunAsync();

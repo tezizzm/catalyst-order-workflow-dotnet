@@ -8,8 +8,15 @@ spec:
   type: state.redis
   version: v1
   metadata:
+    # The dashboard container panics on startup if Redis isn't immediately reachable (no retries).
+    # Aspire's WaitFor health check runs from the host, but Docker container-to-container networking
+    # can lag behind, causing a race condition on cold starts. This is only problematic on the first
+    # run — subsequent runs work fine with "cache:16379" since Valkey is already up. Using
+    # host.docker.internal routes through the host instead, matching the same path the health check
+    # validates, which avoids the issue on first run.
+    # Original: value: "cache:16379"
     - name: redisHost
-      value: "cache:16379"
+      value: "host.docker.internal:16379"
     - name: redisPassword
       value: "zxczxc123"
     - name: actorStateStore

@@ -9,7 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
 
         <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.4.0" />
         <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.4.0" />

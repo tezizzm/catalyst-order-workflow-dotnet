@@ -85,6 +85,6 @@ app.MapNotificationServiceEndpoints();
 
 var run = app.RunAsync();
 
-Console.WriteLine("Notification service started...");
+app.Logger.LogInformation("Notification service started...");
 
 await run;

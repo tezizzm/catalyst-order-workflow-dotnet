@@ -29,6 +29,13 @@ spec:
                 secretKeyRef:
                   name: catalyst-app-tokens
                   key: order-manager
+            # Optional: Azure Application Insights connection string for telemetry
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: azure-monitor
+                  key: connection-string
+                  optional: true
           envFrom:
             - configMapRef:
                 name: catalyst-env

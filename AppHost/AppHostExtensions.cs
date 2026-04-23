@@ -35,7 +35,7 @@ public static class AppHostExtensions
             [
                 Path.Join(ExecutingPath, "Resources/dapr"),
             ],
-        });
+        }).WaitFor(cache);
 
         inventoryService.WithDaprSidecar(new DaprSidecarOptions
         {
@@ -44,7 +44,7 @@ public static class AppHostExtensions
             [
                 Path.Join(ExecutingPath, "Resources/dapr"),
             ],
-        });
+        }).WaitFor(cache);
 
         notificationService.WithDaprSidecar(new DaprSidecarOptions
         {
@@ -53,7 +53,7 @@ public static class AppHostExtensions
             [
                 Path.Join(ExecutingPath, "Resources/dapr"),
             ],
-        });
+        }).WaitFor(cache);
 
         builder
             .AddContainer("diagrid-dashboard", "ghcr.io/diagridio/diagrid-dashboard:latest")

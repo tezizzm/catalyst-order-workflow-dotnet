@@ -7,3 +7,5 @@ data:
   ASPNETCORE_URLS: "http://+:8080"
   DAPR_HTTP_ENDPOINT: "https://http-prj808616.cloud.r1.diagrid.io:443"
   DAPR_GRPC_ENDPOINT: "https://grpc-prj808616.cloud.r1.diagrid.io:443"
+  # Optional: OTLP exporter endpoint (e.g., for a self-hosted collector or Azure Monitor OTLP ingestion)
+  # OTEL_EXPORTER_OTLP_ENDPOINT: "<your-otlp-endpoint>"

@@ -5,6 +5,7 @@ using Diagrid.Labs.Catalyst.OrderWorkflow.Common.ServiceDefaults;
 using Diagrid.Labs.Catalyst.OrderWorkflow.NotificationService.Hubs;
 using Diagrid.Labs.Catalyst.OrderWorkflow.NotificationService.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace Diagrid.Labs.Catalyst.OrderWorkflow.NotificationService;
 
@@ -17,9 +18,10 @@ public static class NotificationServiceEndpointExtensions
     public static void MapNotificationServiceEndpoints(this IEndpointRouteBuilder app)
     {
         // Pub/Sub subscription handler for order notifications
-        app.MapPost("/order-notification", async (OrderStatusNotification notification, IHubContext<NotificationHub> hubContext) =>
+        app.MapPost("/order-notification", async (OrderStatusNotification notification, IHubContext<NotificationHub> hubContext, ILoggerFactory loggerFactory) =>
         {
-            Console.WriteLine($"Received order notification - Order ID: {notification.OrderId}, Status: {notification.Status}");
+            var logger = loggerFactory.CreateLogger("NotificationService");
+            logger.LogInformation("Received order notification - Order ID: {OrderId}, Status: {Status}", notification.OrderId, notification.Status);
             var viewModel = new NotificationViewModel
             {
                 Type = "order",
@@ -45,7 +47,7 @@ public static class NotificationServiceEndpointExtensions
 
             // Broadcast to all connected clients
             await hubContext.Clients.All.SendAsync("ReceiveNotification", viewModel);
-            Console.WriteLine($"Broadcasted order notification to all connected clients");
+            logger.LogInformation("Broadcasted order notification to all connected clients");
 
             return Results.Ok();
         })
@@ -54,12 +56,13 @@ public static class NotificationServiceEndpointExtensions
         .WithTopic(ShopActivityPubSub.PubSubName, ShopActivityPubSub.OrderTopic);
 
         // Get notification history
-        app.MapGet("/notifications/history", () =>
+        app.MapGet("/notifications/history", (ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("NotificationService");
             lock (LockObject)
             {
                 var count = NotificationHistory.Count;
-                Console.WriteLine($"History requested - Returning {count} notifications");
+                logger.LogInformation("History requested - Returning {Count} notifications", count);
                 return Results.Ok(NotificationHistory.OrderByDescending(n => n.Timestamp).ToList());
             }
         })
@@ -67,8 +70,9 @@ public static class NotificationServiceEndpointExtensions
         .WithOpenApi();
 
         // Service status endpoint
-        app.MapGet("/status", async (IHttpClientFactory httpClientFactory, IConfiguration config) =>
+        app.MapGet("/status", async (IHttpClientFactory httpClientFactory, IConfiguration config, ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("NotificationService");
             static async Task<string> CheckHealth(HttpClient client, string path = "/healthz")
             {
                 try
@@ -124,7 +128,7 @@ public static class NotificationServiceEndpointExtensions
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Could not check chaos experiment status for {svc}: {ex.Message}");
+                        logger.LogWarning("Could not check chaos experiment status for {Service}: {Error}", svc, ex.Message);
                     }
                 }
             }
@@ -137,7 +141,7 @@ public static class NotificationServiceEndpointExtensions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Could not build chaos active status: {ex.Message}");
+                logger.LogWarning("Could not build chaos active status: {Error}", ex.Message);
             }
 
             return Results.Ok(new
@@ -153,9 +157,10 @@ public static class NotificationServiceEndpointExtensions
         .WithOpenApi();
 
         // Create a new order by calling OrderManager via Dapr service invocation
-        app.MapPost("/order", async (CreateOrderRequest request, DaprClient daprClient) =>
+        app.MapPost("/order", async (CreateOrderRequest request, DaprClient daprClient, ILoggerFactory loggerFactory) =>
         {
-            Console.WriteLine($"Creating new order - Customer: {request.CustomerId}, Items: {request.Items.Count}");
+            var logger = loggerFactory.CreateLogger("NotificationService");
+            logger.LogInformation("Creating new order - Customer: {CustomerId}, Items: {ItemCount}", request.CustomerId, request.Items.Count);
 
             var httpClient = daprClient.CreateInvokableHttpClient(ResourceNames.OrderManager);
 
@@ -166,13 +171,13 @@ public static class NotificationServiceEndpointExtensions
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<CreateOrderResult>();
-                    Console.WriteLine($"Order created successfully - Order ID: {result?.OrderId}");
+                    logger.LogInformation("Order created successfully - Order ID: {OrderId}", result?.OrderId);
                     return Results.Ok(result);
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Failed to create order - Status: {response.StatusCode}, Error: {errorContent}");
+                    logger.LogError("Failed to create order - Status: {StatusCode}, Error: {ErrorContent}", response.StatusCode, errorContent);
                     return Results.Problem(
                         detail: errorContent,
                         statusCode: (int)response.StatusCode,
@@ -182,7 +187,7 @@ public static class NotificationServiceEndpointExtensions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating order: {ex.Message}");
+                logger.LogError(ex, "Error creating order");
                 return Results.Problem(
                     detail: ex.Message,
                     statusCode: 500,
@@ -194,12 +199,13 @@ public static class NotificationServiceEndpointExtensions
         .WithOpenApi();
 
         // Start chaos experiment for a service
-        app.MapPost("/chaos/{service}/start", async (string service, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+        app.MapPost("/chaos/{service}/start", async (string service, IHttpClientFactory httpClientFactory, IConfiguration config, ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("NotificationService");
             var token = config["CHAOS_MESH_TOKEN"];
             if (string.IsNullOrEmpty(token))
             {
-                Console.WriteLine("Chaos Mesh token not configured");
+                logger.LogWarning("Chaos Mesh token not configured");
                 return Results.Problem(detail: "CHAOS_MESH_TOKEN is not configured", statusCode: 500, title: "Chaos Mesh token missing");
             }
 
@@ -223,18 +229,18 @@ public static class NotificationServiceEndpointExtensions
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"Chaos Mesh start failed for {service}: {response.StatusCode} {body}");
+                    logger.LogError("Chaos Mesh start failed for {Service}: {StatusCode} {Body}", service, response.StatusCode, body);
                     return Results.Problem(detail: body, statusCode: (int)response.StatusCode, title: "Failed to start chaos experiment");
                 }
 
                 var result = JsonSerializer.Deserialize<ChaosMeshExperimentResult>(body, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 _chaosExperimentUids[service] = result?.Uid;
-                Console.WriteLine($"Chaos experiment started for {service} - UID: {_chaosExperimentUids[service]}");
+                logger.LogInformation("Chaos experiment started for {Service} - UID: {Uid}", service, _chaosExperimentUids[service]);
                 return Results.Ok(result);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting chaos experiment for {service}: {ex.Message}");
+                logger.LogError(ex, "Error starting chaos experiment for {Service}", service);
                 return Results.Problem(detail: ex.Message, statusCode: 500, title: "Error starting chaos experiment");
             }
         })
@@ -242,8 +248,9 @@ public static class NotificationServiceEndpointExtensions
         .WithOpenApi();
 
         // Stop (delete) chaos experiment for a service
-        app.MapDelete("/chaos/{service}", async (string service, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+        app.MapDelete("/chaos/{service}", async (string service, IHttpClientFactory httpClientFactory, IConfiguration config, ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("NotificationService");
             var token = config["CHAOS_MESH_TOKEN"];
             if (string.IsNullOrEmpty(token))
                 return Results.Problem(detail: "CHAOS_MESH_TOKEN is not configured", statusCode: 500, title: "Chaos Mesh token missing");
@@ -279,7 +286,7 @@ public static class NotificationServiceEndpointExtensions
 
             if (string.IsNullOrEmpty(_chaosExperimentUids.GetValueOrDefault(service)))
             {
-                Console.WriteLine($"Chaos experiment not found for {service}");
+                logger.LogWarning("Chaos experiment not found for {Service}", service);
                 return Results.NotFound($"No active chaos experiment found for {service}");
             }
 
@@ -294,17 +301,17 @@ public static class NotificationServiceEndpointExtensions
                 if (!response.IsSuccessStatusCode)
                 {
                     var body = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Chaos Mesh stop failed for {service}: {response.StatusCode} {body}");
+                    logger.LogError("Chaos Mesh stop failed for {Service}: {StatusCode} {Body}", service, response.StatusCode, body);
                     return Results.Problem(detail: body, statusCode: (int)response.StatusCode, title: "Failed to stop chaos experiment");
                 }
 
-                Console.WriteLine($"Chaos experiment stopped for {service} - UID: {uid}");
+                logger.LogInformation("Chaos experiment stopped for {Service} - UID: {Uid}", service, uid);
                 _chaosExperimentUids[service] = null;
                 return Results.Ok();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error stopping chaos experiment for {service}: {ex.Message}");
+                logger.LogError(ex, "Error stopping chaos experiment for {Service}", service);
                 return Results.Problem(detail: ex.Message, statusCode: 500, title: "Error stopping chaos experiment");
             }
         })

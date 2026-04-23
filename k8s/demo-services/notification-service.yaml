@@ -30,6 +30,13 @@ spec:
                 secretKeyRef:
                   name: catalyst-app-tokens
                   key: notification-service
+            # Optional: Azure Application Insights connection string for telemetry
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: azure-monitor
+                  key: connection-string
+                  optional: true
             - name: ChaosMesh__DashboardUrl
               value: "https://catalyst-demo-chaosmesh.diagrid.us"
             # Optional: inject Chaos Mesh token to enable chaos experiments from the UI
