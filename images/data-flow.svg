@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow-rpc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrow-rpc-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M10,0 L0,5 L10,10 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrow-pub" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6a1b9a"/>
+    </marker>
+    <marker id="arrow-sub" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-state" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arrow-cli" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrow-cli-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M10,0 L0,5 L10,10 z" fill="#1565c0"/>
+    </marker>
+    <style>
+      .title       { font-size: 22px; font-weight: 700; fill: #102a43; }
+      .subtitle    { font-size: 12px; fill: #486581; }
+      .svc-title   { font-size: 16px; font-weight: 700; fill: #ffffff; }
+      .svc-sub     { font-size: 11px; fill: #e8eaf6; }
+      .node-title  { font-size: 14px; font-weight: 700; fill: #102a43; }
+      .node-sub    { font-size: 11px; fill: #486581; }
+      .edge-label-pub   { font-size: 11px; fill: #6a1b9a; font-weight: 600; }
+      .edge-label-sub   { font-size: 11px; fill: #2e7d32; font-weight: 600; }
+      .edge-label-state { font-size: 11px; fill: #c62828; font-weight: 600; }
+      .edge-label-rpc   { font-size: 11px; fill: #37474f; font-weight: 600; }
+      .edge-label-cli   { font-size: 11px; fill: #1565c0; font-weight: 600; }
+      .legend-text { font-size: 12px; fill: #102a43; }
+      .lane-label  { font-size: 11px; font-weight: 700; fill: #607d8b; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="40" y="38" class="title">Catalyst Order Workflow — Data Flow</text>
+  <text x="40" y="58" class="subtitle">Aspire AppHost orchestrates three services that interact via Dapr sidecars over a Valkey/Redis backplane (state + pub/sub).</text>
+
+  <!-- Legend (top right, kept out of the diagram area) -->
+  <g transform="translate(990, 28)">
+    <rect x="0" y="0" width="380" height="44" rx="6" fill="#fafafa" stroke="#cfd8dc"/>
+    <text x="10" y="18" class="legend-text" font-weight="700">Edge types</text>
+    <line x1="10" y1="32" x2="34" y2="32" stroke="#1565c0" stroke-width="2" marker-end="url(#arrow-cli)"/>
+    <text x="40" y="36" class="legend-text">client</text>
+    <line x1="80" y1="32" x2="104" y2="32" stroke="#37474f" stroke-width="2" marker-end="url(#arrow-rpc)"/>
+    <text x="110" y="36" class="legend-text">rpc</text>
+    <line x1="138" y1="32" x2="162" y2="32" stroke="#6a1b9a" stroke-width="2" marker-end="url(#arrow-pub)"/>
+    <text x="168" y="36" class="legend-text">publish</text>
+    <line x1="218" y1="32" x2="242" y2="32" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-sub)"/>
+    <text x="248" y="36" class="legend-text">subscribe</text>
+    <line x1="312" y1="32" x2="336" y2="32" stroke="#c62828" stroke-width="2" marker-end="url(#arrow-state)"/>
+    <text x="342" y="36" class="legend-text">state</text>
+  </g>
+
+  <!-- Lane labels (far left, away from any line/box) -->
+  <text x="10" y="170" class="lane-label" transform="rotate(-90 10 170)">CLIENTS</text>
+  <text x="10" y="370" class="lane-label" transform="rotate(-90 10 370)">SERVICES</text>
+  <text x="10" y="720" class="lane-label" transform="rotate(-90 10 720)">BACKPLANE</text>
+
+  <!-- ============================================================= -->
+  <!--                          CLIENTS                              -->
+  <!-- ============================================================= -->
+  <g>
+    <rect x="140" y="140" width="280" height="80" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+    <text x="280" y="170" text-anchor="middle" class="node-title">Web UI (Browser)</text>
+    <text x="280" y="188" text-anchor="middle" class="node-sub">NotificationService wwwroot</text>
+    <text x="280" y="204" text-anchor="middle" class="node-sub">SignalR client + fetch</text>
+  </g>
+
+  <g>
+    <rect x="960" y="140" width="280" height="80" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+    <text x="1100" y="170" text-anchor="middle" class="node-title">HTTP Client</text>
+    <text x="1100" y="188" text-anchor="middle" class="node-sub">endpoints.http / curl / Scalar</text>
+    <text x="1100" y="204" text-anchor="middle" class="node-sub">Direct REST calls</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!--                          SERVICES                             -->
+  <!-- ============================================================= -->
+  <!-- NotificationService -->
+  <g>
+    <rect x="60" y="260" width="320" height="210" rx="12" fill="#0d47a1"/>
+    <text x="220" y="285" text-anchor="middle" class="svc-title">NotificationService</text>
+    <text x="220" y="303" text-anchor="middle" class="svc-sub">ASP.NET Core + SignalR Hub</text>
+    <rect x="80" y="315" width="280" height="145" rx="6" fill="#1976d2" stroke="#42a5f5"/>
+    <text x="95" y="335" class="svc-sub" font-weight="700">Endpoints</text>
+    <text x="95" y="355" class="svc-sub">• POST /order-notification   (pub/sub handler)</text>
+    <text x="95" y="373" class="svc-sub">• POST /order                (fan-out to OM)</text>
+    <text x="95" y="391" class="svc-sub">• GET  /notifications/history</text>
+    <text x="95" y="409" class="svc-sub">• GET  /status</text>
+    <text x="95" y="427" class="svc-sub">• Hub  /notificationHub      (SignalR)</text>
+    <text x="95" y="450" class="svc-sub" font-style="italic">scope: shop-activity (subscriber)</text>
+  </g>
+
+  <!-- OrderManager -->
+  <g>
+    <rect x="520" y="260" width="360" height="230" rx="12" fill="#4a148c"/>
+    <text x="700" y="285" text-anchor="middle" class="svc-title">OrderManager</text>
+    <text x="700" y="303" text-anchor="middle" class="svc-sub">Dapr Workflow host</text>
+    <rect x="540" y="315" width="320" height="70" rx="6" fill="#6a1b9a" stroke="#ab47bc"/>
+    <text x="555" y="335" class="svc-sub" font-weight="700">REST Endpoints</text>
+    <text x="555" y="353" class="svc-sub">• POST /order  → ScheduleNewWorkflowAsync</text>
+    <text x="555" y="371" class="svc-sub">• GET  /order/{'{'}id{'}'}, /inventory/*</text>
+    <rect x="540" y="395" width="320" height="85" rx="6" fill="#6a1b9a" stroke="#ab47bc"/>
+    <text x="555" y="415" class="svc-sub" font-weight="700">Workflows + Activities</text>
+    <text x="555" y="433" class="svc-sub">OrderProcessingWorkflow → ShippingWorkflow</text>
+    <text x="555" y="451" class="svc-sub">Validate · Payment · CheckInventory · UpdateInventory</text>
+    <text x="555" y="469" class="svc-sub">SendNotification · StartCampaign · FeedbackDelay</text>
+  </g>
+
+  <!-- InventoryService -->
+  <g>
+    <rect x="1020" y="260" width="320" height="210" rx="12" fill="#1b5e20"/>
+    <text x="1180" y="285" text-anchor="middle" class="svc-title">InventoryService</text>
+    <text x="1180" y="303" text-anchor="middle" class="svc-sub">ASP.NET Core</text>
+    <rect x="1040" y="315" width="280" height="145" rx="6" fill="#2e7d32" stroke="#66bb6a"/>
+    <text x="1055" y="335" class="svc-sub" font-weight="700">Endpoints</text>
+    <text x="1055" y="355" class="svc-sub">• POST /inventory/search</text>
+    <text x="1055" y="373" class="svc-sub">• POST /inventory/update</text>
+    <text x="1055" y="391" class="svc-sub">• GET  /inventory/{'{'}productId{'}'}</text>
+    <text x="1055" y="409" class="svc-sub">• POST /order-notification   (pub/sub handler)</text>
+    <text x="1055" y="427" class="svc-sub">• POST /inventory/initialize</text>
+    <text x="1055" y="450" class="svc-sub" font-style="italic">Seeds 5 sample products at startup</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!--                       DAPR SIDECAR BAND                       -->
+  <!-- ============================================================= -->
+  <rect x="60" y="595" width="1280" height="40" rx="6" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="700" y="612" text-anchor="middle" class="node-sub" fill="#ef6c00" font-weight="700">Dapr Sidecars   (local: daprd · Catalyst: managed API)</text>
+  <text x="700" y="627" text-anchor="middle" class="node-sub" fill="#ef6c00">service invocation · state · pub/sub · workflow engine</text>
+
+  <!-- ============================================================= -->
+  <!--                          BACKPLANE                            -->
+  <!-- ============================================================= -->
+  <text x="60" y="660" class="node-sub" fill="#c62828" font-weight="700">Valkey / Redis backplane   (catalyst-order-workflow-cache:16379)   ·   In Catalyst mode → Diagrid-managed components</text>
+
+  <!-- shop-activity -->
+  <g>
+    <rect x="120" y="670" width="580" height="160" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+    <text x="410" y="697" text-anchor="middle" class="node-title">shop-activity</text>
+    <text x="410" y="715" text-anchor="middle" class="node-sub">Dapr pub/sub component</text>
+    <text x="410" y="733" text-anchor="middle" class="node-sub">type: pubsub.redis   ·   topic: orders</text>
+    <text x="410" y="753" text-anchor="middle" class="node-sub">CloudEvents over Redis Streams</text>
+    <text x="410" y="780" text-anchor="middle" class="node-sub" font-style="italic">scopes: order-manager, inventory-service, notification-service</text>
+    <text x="410" y="800" text-anchor="middle" class="node-sub" font-style="italic">Subscription routes deliveries to /order-notification</text>
+  </g>
+
+  <!-- inventory-store -->
+  <g>
+    <rect x="720" y="670" width="500" height="160" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+    <text x="970" y="697" text-anchor="middle" class="node-title">inventory-store</text>
+    <text x="970" y="715" text-anchor="middle" class="node-sub">Dapr state component</text>
+    <text x="970" y="733" text-anchor="middle" class="node-sub">type: state.redis   ·   actorStateStore: true</text>
+    <text x="970" y="753" text-anchor="middle" class="node-sub">keys: inventory:{'{'}productId{'}'}</text>
+    <text x="970" y="780" text-anchor="middle" class="node-sub" font-style="italic">scopes: order-manager, inventory-service</text>
+    <text x="970" y="800" text-anchor="middle" class="node-sub" font-style="italic">Also backs Dapr Workflow state (history + instances)</text>
+  </g>
+
+  <!-- Diagrid Dashboard -->
+  <g>
+    <rect x="1240" y="670" width="140" height="160" rx="10" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+    <text x="1310" y="697" text-anchor="middle" class="node-title" fill="#5e35b1">Diagrid</text>
+    <text x="1310" y="715" text-anchor="middle" class="node-title" fill="#5e35b1">Dashboard</text>
+    <text x="1310" y="735" text-anchor="middle" class="node-sub">container</text>
+    <text x="1310" y="751" text-anchor="middle" class="node-sub">:8080</text>
+    <text x="1310" y="780" text-anchor="middle" class="node-sub" font-style="italic">reads same</text>
+    <text x="1310" y="795" text-anchor="middle" class="node-sub" font-style="italic">backplane via</text>
+    <text x="1310" y="810" text-anchor="middle" class="node-sub" font-style="italic">its own component</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!--                            EDGES                              -->
+  <!-- ============================================================= -->
+
+  <!-- L1  Browser <-> NS  (REST + SignalR, bidirectional) -->
+  <line x1="280" y1="220" x2="280" y2="260"
+        stroke="#1565c0" stroke-width="2"
+        marker-end="url(#arrow-cli)" marker-start="url(#arrow-cli-start)"/>
+  <text x="290" y="238" class="edge-label-cli">SignalR + REST</text>
+
+  <!-- L2  HTTP Client -> OM  (orthogonal in clear band at y=238) -->
+  <polyline points="1010,220 1010,238 820,238 820,260"
+            fill="none" stroke="#1565c0" stroke-width="2"
+            marker-end="url(#arrow-cli)"/>
+  <text x="830" y="232" class="edge-label-cli">POST /order, GET /order/{'{'}id{'}'}</text>
+
+  <!-- L3  HTTP Client -> IS  (straight down at x=1180) -->
+  <line x1="1180" y1="220" x2="1180" y2="260"
+        stroke="#1565c0" stroke-width="2" marker-end="url(#arrow-cli)"/>
+  <text x="1190" y="244" class="edge-label-cli">REST (Scalar)</text>
+
+  <!-- L4  NS -> OM  (Dapr service invocation) -->
+  <line x1="380" y1="365" x2="520" y2="365"
+        stroke="#37474f" stroke-width="2" marker-end="url(#arrow-rpc)"/>
+  <text x="392" y="358" class="edge-label-rpc">Dapr invoke → POST /order</text>
+
+  <!-- L5  OM -> IS  (Dapr service invocation) -->
+  <line x1="880" y1="365" x2="1020" y2="365"
+        stroke="#37474f" stroke-width="2" marker-end="url(#arrow-rpc)"/>
+  <text x="888" y="358" class="edge-label-rpc">Dapr invoke</text>
+  <text x="888" y="380" class="edge-label-rpc">/inventory/search · /update</text>
+
+  <!-- ===== Routing corridor: y=510, y=535, y=560 (all distinct levels) ===== -->
+
+  <!-- L6  OM publish -> shop-activity   (orthogonal, y=510 horizontal) -->
+  <polyline points="640,490 640,510 410,510 410,670"
+            fill="none" stroke="#6a1b9a" stroke-width="2"
+            marker-end="url(#arrow-pub)"/>
+  <text x="425" y="503" class="edge-label-pub">publish topic 'orders'  (SendNotificationActivity)</text>
+
+  <!-- L7  shop-activity -> NS  (subscribe, vertical at x=240) -->
+  <line x1="240" y1="670" x2="240" y2="470"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-sub)"/>
+  <text x="250" y="558" class="edge-label-sub">subscribe</text>
+  <text x="250" y="574" class="edge-label-sub">/order-notification</text>
+
+  <!-- L8  shop-activity -> IS  (subscribe, horizontal at y=560) -->
+  <polyline points="620,670 620,560 1060,560 1060,470"
+            fill="none" stroke="#2e7d32" stroke-width="2"
+            marker-end="url(#arrow-sub)"/>
+  <text x="710" y="554" class="edge-label-sub">subscribe → /order-notification</text>
+
+  <!-- L9  OM -> inventory-store  (workflow actor state, horizontal at y=535) -->
+  <polyline points="800,490 800,535 1140,535 1140,670"
+            fill="none" stroke="#c62828" stroke-width="2"
+            marker-end="url(#arrow-state)"/>
+  <text x="815" y="528" class="edge-label-state">workflow state (actor store)</text>
+
+  <!-- L10  IS -> inventory-store  (straight down at x=1200) -->
+  <line x1="1200" y1="470" x2="1200" y2="670"
+        stroke="#c62828" stroke-width="2" marker-end="url(#arrow-state)"/>
+  <text x="1210" y="568" class="edge-label-state">GetState / SaveState</text>
+  <text x="1210" y="584" class="edge-label-state">inventory:{'{'}productId{'}'}</text>
+
+  <!-- L11  Diagrid Dashboard -> inventory-store -->
+  <line x1="1240" y1="730" x2="1220" y2="730"
+        stroke="#c62828" stroke-width="2" marker-end="url(#arrow-state)"/>
+  <text x="1180" y="660" class="edge-label-state">reads</text>
+
+</svg>
