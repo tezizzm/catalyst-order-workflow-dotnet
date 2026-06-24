@@ -294,6 +294,18 @@ public static class NotificationServiceEndpointExtensions
                 if (!response.IsSuccessStatusCode)
                 {
                     var body = await response.Content.ReadAsStringAsync();
+
+                    // The Chaos Mesh dashboard can hold a stale record for an experiment
+                    // whose underlying CR has already been removed (manual delete, namespace
+                    // cleanup, or a prior partial stop). Deleting by UID then 404s. Since the
+                    // desired state (no active experiment) is already true, treat stop as idempotent.
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        Console.WriteLine($"Chaos experiment for {service} already gone (UID: {uid}) - treating stop as success");
+                        _chaosExperimentUids[service] = null;
+                        return Results.Ok();
+                    }
+
                     Console.WriteLine($"Chaos Mesh stop failed for {service}: {response.StatusCode} {body}");
                     return Results.Problem(detail: body, statusCode: (int)response.StatusCode, title: "Failed to stop chaos experiment");
                 }
