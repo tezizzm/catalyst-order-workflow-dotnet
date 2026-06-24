@@ -18,7 +18,7 @@ spec:
       containers:
         - name: order-manager
           # You can use this public image for the demo, or build and push your own
-          image: public.ecr.aws/e9f1v8j5/catalyst-demo/order-manager:2.12
+          image: public.ecr.aws/e9f1v8j5/catalyst-demo/order-manager:2.13
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

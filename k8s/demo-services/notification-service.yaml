@@ -18,7 +18,7 @@ spec:
       containers:
         - name: notification-service
           # You can use this public image for the demo, or build and push your own
-          image: public.ecr.aws/e9f1v8j5/catalyst-demo/notification-service:2.12
+          image: public.ecr.aws/e9f1v8j5/catalyst-demo/notification-service:2.13
           imagePullPolicy: IfNotPresent
           command: ["dotnet", "NotificationService.dll"]
           ports:
